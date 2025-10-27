@@ -27,3 +27,4 @@ if st.checkbox("Enable Auto-Stop (Test Only)"):
         from scanner import auto_remediate
         stopped = auto_remediate(dry_run=False)  # Or True for sim
         st.success(f"Stopped {stopped} instances!")
+        
