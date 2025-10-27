@@ -1,3 +1,14 @@
+# Remote state backend
+terraform {
+  backend "s3" {
+    bucket         = "tf-state-aws-cost-optimizer-160564475451"  # Updated bucket name
+    key            = "terraform.tfstate"
+    region         = "us-east-2"
+    dynamodb_table = "tf-lock-aws-cost-optimizer"
+    encrypt        = true
+  }
+}
+
 terraform {
   required_providers {
     aws = {
@@ -8,12 +19,12 @@ terraform {
 }
 
 provider "aws" {
-  region = "us-east-2"  # Your region
+  region = "us-east-2"
 }
 
 data "archive_file" "lambda_zip" {
   type        = "zip"
-  source_dir  = "lambda_src"  # We'll create this
+  source_dir  = "lambda_src"
   output_path = "handler.zip"
 }
 
@@ -27,7 +38,7 @@ resource "aws_lambda_function" "optimizer" {
 
   environment {
     variables = {
-      DRY_RUN = "true"  # Toggle to "false" for real stops
+      DRY_RUN = "true"
     }
   }
 
@@ -95,7 +106,7 @@ resource "aws_iam_role_policy" "lambda_ec2_ce" {
 
 resource "aws_cloudwatch_event_rule" "daily_trigger" {
   name                = "daily-cost-scan"
-  schedule_expression = "cron(0 2 * * ? *)"  # Daily at 2AM UTC
+  schedule_expression = "cron(0 2 * * ? *)"
 }
 
 resource "aws_cloudwatch_event_target" "lambda_target" {

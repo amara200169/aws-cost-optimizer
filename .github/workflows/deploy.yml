@@ -19,15 +19,16 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ secrets.AWS_REGION }}
 
+    - name: Terraform Init with Backend
+      run: terraform init -reconfigure
+
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
       with:
         terraform_version: 1.9.0
 
-    - name: Terraform Init & Plan
-      run: |
-        terraform init
-        terraform plan -no-color
+    - name: Terraform Plan
+      run: terraform plan -no-color
 
     - name: Terraform Apply
       if: github.ref == 'refs/heads/main' && github.event_name == 'push'
@@ -41,4 +42,3 @@ jobs:
         aws lambda update-function-code --function-name aws-cost-optimizer --zip-file fileb://../handler.zip
       env:
         AWS_REGION: ${{ secrets.AWS_REGION }}
-        
