@@ -88,7 +88,7 @@ resource "aws_lambda_function" "optimizer" {
   filename         = data.archive_file.lambda_zip.output_path
   function_name    = "aws-cost-optimizer"
   role             = aws_iam_role.lambda_role.arn
-  handler          = "lambda_handler.lambda_handler"
+  handler          = "lambda_handler.main"
   runtime          = "python3.10"
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
 
@@ -131,3 +131,4 @@ resource "aws_lambda_permission" "allow_cloudwatch" {
 output "lambda_arn" {
   value = aws_lambda_function.optimizer.arn
 }
+
