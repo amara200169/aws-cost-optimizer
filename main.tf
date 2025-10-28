@@ -49,7 +49,7 @@ resource "aws_iam_role_policy_attachment" "lambda_basic" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-# Custom inline policy for EC2 + CloudWatch + Cost Explorer
+# Custom inline policy for EC2 + CloudWatch + Cost Explorer + SNS
 resource "aws_iam_role_policy" "lambda_ec2_ce" {
   name = "lambda_ec2_ce_policy"
   role = aws_iam_role.lambda_role.id
@@ -78,6 +78,13 @@ resource "aws_iam_role_policy" "lambda_ec2_ce" {
           "ce:GetCostAndUsage"
         ],
         Resource = "*"
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "sns:Publish"
+        ],
+        Resource = "arn:aws:sns:us-east-2:160564475450:cost-alerts"
       }
     ]
   })
@@ -131,4 +138,3 @@ resource "aws_lambda_permission" "allow_cloudwatch" {
 output "lambda_arn" {
   value = aws_lambda_function.optimizer.arn
 }
-
