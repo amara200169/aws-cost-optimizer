@@ -1,6 +1,6 @@
 terraform {
   backend "s3" {
-    bucket         = "sheri-aws-cost-tf-state-20251027"
+    bucket         = "sheri-cost-tf-state-419445613749"
     key            = "terraform.tfstate"
     region         = "us-east-2"
     encrypt        = true
