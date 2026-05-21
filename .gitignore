@@ -1,2 +1,26 @@
+# Terraform
 .terraform/
-.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfstate.*.backup
+terraform.tfvars
+handler.zip
+.terraform.lock.hcl
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+*.egg-info/
+
+# Environment
+.env
+.env.*
+
+# IDE
+.vscode/
+.idea/

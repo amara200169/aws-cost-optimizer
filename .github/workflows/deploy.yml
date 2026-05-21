@@ -2,43 +2,69 @@ name: Deploy Cost Optimizer
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
+
+env:
+  AWS_REGION: us-east-2
+  PYTHON_VERSION: "3.12"
+  TF_VERSION: "1.9.0"
 
 jobs:
-  deploy:
+  test:
+    name: Run Tests
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Configure AWS
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
 
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v3
-      with:
-        terraform_version: 1.9.0
+      - name: Install dependencies
+        run: pip install -r requirements.txt -r requirements-dev.txt
 
-    - name: Terraform Init with Backend
-      run: terraform init -reconfigure
+      - name: Run tests
+        run: pytest tests/ -v --tb=short
 
-    - name: Terraform Plan
-      run: terraform plan -no-color
+  deploy:
+    name: Terraform Deploy
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
-    - name: Terraform Apply
-      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-      run: terraform apply -auto-approve
+    steps:
+      - uses: actions/checkout@v4
 
-    - name: Update Lambda Code
-      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-      run: |
-        cd lambda_src
-        zip -r ../handler.zip .
-        aws lambda update-function-code --function-name aws-cost-optimizer --zip-file fileb://../handler.zip
-      env:
-        AWS_REGION: ${{ secrets.AWS_REGION }}
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Init
+        run: terraform init -reconfigure
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: |
+          terraform plan -no-color \
+            -var="alert_email=${{ secrets.ALERT_EMAIL }}" \
+            -var="dry_run=true"
+
+      - name: Terraform Apply
+        run: |
+          terraform apply -auto-approve \
+            -var="alert_email=${{ secrets.ALERT_EMAIL }}" \
+            -var="dry_run=true"

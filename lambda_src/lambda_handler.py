@@ -5,8 +5,7 @@ import boto3
 
 from scanner import get_idle_instances, auto_remediate, get_cost_summary
 
-# Exact topic ARN you provided
-SNS_TOPIC_ARN = "arn:aws:sns:us-east-2:160564475450:cost-alerts"
+SNS_TOPIC_ARN = os.environ.get("SNS_TOPIC_ARN", "")
 sns = boto3.client("sns")
 
 def main(event, context):  # <- This MUST be at column 1 (no spaces before 'def')
